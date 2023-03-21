@@ -81,7 +81,8 @@ async function deploy(): Promise<void> {
   } = envalid.cleanEnv(process.env, inputs, envOptions);
 
   // Get a websocket that connects us to Infura Ethereum node
-  const deploymentKeys = [deployerPrivateKeyHex, tokenOwnerPrivateKeyHex];
+  const deploymentKeys = [deployerPrivateKeyHex, tokenOwnerPrivateKeyHex]
+  console.log("Keys are", deploymentKeys)
   const provider = createProvider(deploymentKeys, infuraProjectId, network);
 
   // OpenZeppelin framework likes it globals
@@ -107,6 +108,8 @@ async function deploy(): Promise<void> {
   const tokenOwnerAccount = Account.fromPrivate(`0x${tokenOwnerPrivateKeyHex}`);
   const oracleAccount = Account.fromPrivate(`0x${oraclePrivateKeyHex}`);
   const proxyOwner = Account.fromPrivate(`0x${proxyOwnerPrivateKeyHex}`);
+
+  console.log("Deployer is", deployer);
 
   // Gas used 1789.89k on Goerli
   const staking = await deployContract('staking', Staking, [], { from: deployer, gas: 4_000_000 }, etherscanAPIKey);

@@ -12,6 +12,7 @@ import assert = require('assert');
 // https://github.com/ethereum/web3.js/tree/1.x/packages/web3-providers-ws
 // https://github.com/ethereum/web3.js/blob/1.x/packages/web3-providers-ws/src/index.js
 const Web3WsProvider = require('web3-providers-ws');
+const Web3HTTPProvider = require('web3-providers-http');
 
 // Needs JS tyle import
 // https://github.com/trufflesuite/truffle/blob/develop/packages/hdwallet-provider/src/index.ts
@@ -29,6 +30,9 @@ export async function checkDeploymentAccounts(privateKeys: string[]): Promise<vo
   const { web3 } = ZWeb3;
 
   for (const privateKeyHex of privateKeys) {
+
+    console.log("Key", privateKeyHex);
+
     //  When using web3.eth.accounts.privateKeyToAccount
     // https://web3js.readthedocs.io/en/v1.2.0/web3-eth-accounts.html#privatekeytoaccount
     const account = web3.eth.accounts.privateKeyToAccount(`0x${privateKeyHex}`);
@@ -63,11 +67,13 @@ export function createProvider(privateKeys: string[], infuraProjectId: string, n
   };
 
   assert(infuraProjectId, 'Infure project id missing');
-  const rpcURL = `wss://${network}.infura.io/ws/v3/${infuraProjectId}`;
+  //const rpcURL = `wss://${network}.infura.io/ws/v3/${infuraProjectId}`;
+  const rpcURL = `https://${network}.infura.io/v3/${infuraProjectId}`;
 
   console.log('Connecting to Infura endpoint', rpcURL);
 
-  const connectionProvider = new Web3WsProvider(rpcURL, wsOptions);
+  //const connectionProvider = new Web3WsProvider(rpcURL, wsOptions);
+  const connectionProvider = new Web3HTTPProvider(rpcURL, wsOptions);
 
   const zeroExPrivateKeys = privateKeys.map((x) => `0x${x}`);
 
@@ -82,8 +88,8 @@ export function createProvider(privateKeys: string[], infuraProjectId: string, n
   function handleDisconnects(e): void {
     console.log('Disconnect', e);
   }
-  connectionProvider.on('error', (e) => handleDisconnects(e));
-  connectionProvider.on('end', (e) => handleDisconnects(e));
+  //connectionProvider.on('error', (e) => handleDisconnects(e));
+  //connectionProvider.on('end', (e) => handleDisconnects(e));
 
   return walletProvider;
 }
@@ -146,6 +152,8 @@ export async function verifyOnEtherscan(contract: any, constructorArgumentsEncod
 
   console.log('Verifying contract with options', outOptions, 'and flattened source code written to', optionsFile);
 
+  verifierOptions.network = "mumbai";
+
   await publishToEtherscan(verifierOptions);
 }
 
@@ -198,6 +206,8 @@ export async function deployContract(
     constructorArgumentsEncoded = web3.eth.abi.encodeParameters(types, parameters);
     // console.log('Constructor arguments are', constructorABI.inputs, 'and encoded as', constructorArgumentsEncoded);
   }
+
+  txParams.chainId = 80001;
 
   const p = _Contract.new(...parameters, txParams);
   const deployed = await p;

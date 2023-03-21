@@ -40,8 +40,10 @@ function setEtherscanApiSubdomain(network: string): string | never {
       return 'api-kovan';
     case 'goerli':
       return 'api-goerli';
-    default:
-      throw new Error('Invalid network. Currently, etherscan supports mainnet, rinkeby, ropsten, goerli and kovan');
+    case 'mumbai':
+        return 'api-mumbai';
+      default:
+      throw new Error('Invalid network. Currently, etherscan supports mainnet, rinkeby, ropsten, goerli, mumbai and kovan');
   }
 }
 
@@ -85,10 +87,11 @@ export async function publishToEtherscan(params: VerifierOptions): Promise<void 
   const compiler = `v${compilerVersion.replace('.Emscripten.clang', '')}`;
   const optimizerStatus = optimizer ? 1 : 0;
 
+  const mainDomain = "polygonscan";
   const apiSubdomain = setEtherscanApiSubdomain(network);
-  const etherscanApiUrl = `https://${apiSubdomain}.etherscan.io/api`;
+  const etherscanApiUrl = `https://${apiSubdomain}.${mainDomain}.io/api`;
   const networkSubdomain = network === 'mainnet' ? '' : `${network}.`;
-  const etherscanContractUrl = `https://${networkSubdomain}etherscan.io/address`;
+  const etherscanContractUrl = `https://${networkSubdomain}${mainDomain}.io/address`;
 
   const data = {
     apikey: params.apiKey,
@@ -106,6 +109,9 @@ export async function publishToEtherscan(params: VerifierOptions): Promise<void 
   // console.log('Args', data.constructorArguements);
 
   try {
+
+    console.log("Sending request to", etherscanApiUrl);
+
     const response = await axios.request({
       method: 'POST',
       url: etherscanApiUrl,
