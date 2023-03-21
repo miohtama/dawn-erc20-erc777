@@ -108,7 +108,7 @@ async function deploy(): Promise<void> {
   const tokenOwnerAccount = Account.fromPrivate(`0x${tokenOwnerPrivateKeyHex}`);
   const oracleAccount = Account.fromPrivate(`0x${oraclePrivateKeyHex}`);
   const proxyOwner = Account.fromPrivate(`0x${proxyOwnerPrivateKeyHex}`);
-
+  const chainId = 80001;
   console.log("Deployer is", deployer);
 
   // Gas used 1789.89k on Goerli
@@ -151,7 +151,7 @@ async function deploy(): Promise<void> {
   // Deployed newTokenImpl at 0xB993bE16857dB18fF8A04739654334aDb4164CAE gas used 3771.14k
   console.log('Initializing new token at proxy address space of', proxy.address);
   const newToken = DawnTokenImpl.at(proxy.address);
-  await newToken.methods.initializeDawn(tokenOwnerAccount.address, 'Mock of new token', 'NEW').send({ from: deployer });
+  await newToken.methods.initializeDawn(tokenOwnerAccount.address, 'Mock of new token', 'NEW').send({ from: tokenOwnerAccount.address, chainId });
 
   const tokenSwap = await deployContract('tokenSwap', TokenSwap, [], { from: deployer, gas: 5_000_000 }, etherscanAPIKey);
 
@@ -167,7 +167,7 @@ async function deploy(): Promise<void> {
     newToken.address,
     BURN_ADDRESS,
   ];
-  await tokenSwap.methods.initialize(...args).send({ from: deployer });
+  await tokenSwap.methods.initialize(...args).send({ from: deployer, chainId });
 
   console.log('Initializing staking');
   args = [
@@ -177,13 +177,13 @@ async function deploy(): Promise<void> {
     STAKING_TIME,
     oracleAccount.address,
   ];
-  await staking.methods.initialize(...args).send({ from: deployer });
+  await staking.methods.initialize(...args).send({ from: deployer, chainId });
 
   console.log('Approving new tokens for swapping');
-  await newToken.methods.approve(tokenSwap.address, SWAP_BUDGET.toString()).send({ from: tokenOwnerAccount.address });
+  await newToken.methods.approve(tokenSwap.address, SWAP_BUDGET.toString()).send({ from: tokenOwnerAccount.address, chainId });
 
   console.log('Make some OLD test tokens available on the faucet');
-  await oldToken.methods.transfer(faucet.address, SWAP_BUDGET.toString()).send({ from: tokenOwnerAccount.address });
+  await oldToken.methods.transfer(faucet.address, SWAP_BUDGET.toString()).send({ from: tokenOwnerAccount.address, chainId });
 
   // Write report to the console
   console.log(await ZWeb3.getNetworkName(), 'deployment report');
@@ -204,10 +204,10 @@ async function deploy(): Promise<void> {
   console.log('Upgrade proxy for new token', upgradeProxyInfo);
 
   const newTokenInfo = {
-    name: await newToken.methods.name().call(),
+    name: await newToken.methods.name().call({ from: tokenOwnerAccount.address}),
     address: upgradeProxyInfo.address,
-    symbol: await newToken.methods.symbol().call(),
-    supply: await newToken.methods.totalSupply().call(),
+    symbol: await newToken.methods.symbol().call({ from: tokenOwnerAccount.address}),
+    supply: await newToken.methods.totalSupply().call({ from: tokenOwnerAccount.address}),
   };
   console.log('New token through upgrade proxy', newTokenInfo);
   assert(upgradeProxyInfo.implementation === newTokenImpl.address, 'Safety check that the upgrade proxy is correctly wired.');

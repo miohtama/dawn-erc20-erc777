@@ -119,6 +119,7 @@ export async function publishToEtherscan(params: VerifierOptions): Promise<void 
       headers: {
         'Content-type': 'application/x-www-form-urlencoded',
       },
+      validateStatus: () => true,
     });
 
     if (response.status === 200 && response.data.status === '1') {
@@ -128,9 +129,17 @@ export async function publishToEtherscan(params: VerifierOptions): Promise<void 
         `Contract source code of ${params.contractName} verified and published successfully. You can check it here: ${etherscanContractUrl}/${contractAddress}#code`,
       );
     } else {
+      console.log("Ooof", response.data.result);
+      if(response.data.result == "Already Verified") {
+        return;
+      }
       throw new Error(`Error while trying to verify contract: ${response.data.result}`);
     }
   } catch (error) {
+    if(error.message == "Error while trying to verify contract: Already Verified") {
+      return;
+    }
+    console.log("Buuf", error, error.message);
     throw new Error(error.message || 'Error while trying to verify contract');
   }
 }
