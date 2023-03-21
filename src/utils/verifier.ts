@@ -89,9 +89,9 @@ export async function publishToEtherscan(params: VerifierOptions): Promise<void 
 
   const mainDomain = "polygonscan";
   const apiSubdomain = setEtherscanApiSubdomain(network);
-  const etherscanApiUrl = `https://${apiSubdomain}.${mainDomain}.io/api`;
+  const etherscanApiUrl = `https://${apiSubdomain}.${mainDomain}.com/api`;
   const networkSubdomain = network === 'mainnet' ? '' : `${network}.`;
-  const etherscanContractUrl = `https://${networkSubdomain}${mainDomain}.io/address`;
+  const etherscanContractUrl = `https://${networkSubdomain}${mainDomain}.com/address`;
 
   const data = {
     apikey: params.apiKey,
